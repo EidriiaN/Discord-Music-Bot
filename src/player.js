@@ -21,11 +21,24 @@ export const setupPlayer = async (client) => {
         skipFFmpeg: false, // Ensure we use FFmpeg for processing
     });
 
-    // Load cookies from file if it exists
-    let cookiesPath = '';
-    if (existsSync('./cookies.txt')) {
-        cookiesPath = './cookies.txt';
-        console.log('✅ | cookies.txt detected for YouTube.');
+    // Load cookies from .env OR file
+    let cookies = process.env.YOUTUBE_COOKIES || '';
+    
+    // Auto-decode Base64 if detected (common for Portainer env vars)
+    if (cookies && !cookies.includes('\t') && !cookies.includes('\n')) {
+        try {
+            cookies = Buffer.from(cookies, 'base64').toString('utf-8');
+            console.log('✅ | Cookies decoded from Base64 environment variable.');
+        } catch (e) {
+            console.error('❌ | Failed to decode Base64 cookies.');
+        }
+    }
+
+    if (!cookies && existsSync('./cookies.txt')) {
+        cookies = readFileSync('./cookies.txt', 'utf-8');
+        console.log('✅ | cookies.txt loaded.');
+    } else if (cookies) {
+        console.log('✅ | Cookies loaded from Environment Variable.');
     }
 
     // Load Default Extractors
@@ -37,7 +50,7 @@ export const setupPlayer = async (client) => {
     if (youtubeExtractor) {
         youtubeExtractor.options = {
             ...youtubeExtractor.options,
-            cookies: cookiesPath,
+            cookies: cookies,
             ytLibArgs: [
                 '--extractor-args', 
                 `youtube:po_token=${process.env.PO_TOKEN},visitor_data=${process.env.VISITOR_DATA}`
