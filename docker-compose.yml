@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  music-bot:
+    # Portainer will use this to build the image from your Git repo
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: discord-music-bot
+    restart: unless-stopped
+    # Environment variables are handled in the Portainer UI "Env" section
+    volumes:
+      # Map the cookies file from your VPS filesystem
+      # CHANGE THIS PATH to where you put cookies.txt on your VPS
+      - /home/user/music-bot/cookies.txt:/app/cookies.txt
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=2048
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10mb"
+        max-file: "3"
