@@ -1,19 +1,25 @@
-# Use Node.js 22 Slim as the base for a lightweight but compatible image
+# Use Node.js 22 Slim as the base
 FROM node:22-slim
 
-# Install system dependencies required for audio processing (ffmpeg) and yt-dlp (python3)
+# Install system dependencies required for building native modules and audio processing
+# Added build-essential and python3 for npm install compatibility
 RUN apt-get update && apt-get install -y \
     python3 \
+    make \
+    g++ \
+    build-essential \
     ffmpeg \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy package files and install production dependencies
+# Copy package files first to leverage Docker cache
 COPY package*.json ./
-RUN npm install --production
+
+# Install dependencies (verbose to debug errors if they occur)
+RUN npm install --production || (npm install --production --verbose && exit 1)
 
 # Copy the rest of the application code
 COPY . .
