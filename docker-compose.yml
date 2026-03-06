@@ -9,12 +9,7 @@ services:
     container_name: discord-music-bot
     restart: unless-stopped
     
-    # Load .env file if it exists (optional - won't fail if missing)
-    env_file:
-      - path: .env
-        required: false
-    
-    # Environment variables - configure in Portainer or via .env file
+    # Environment variables - configure in Portainer or via .env file (local dev)
     environment:
       # Required: Discord Bot Token
       - DISCORD_TOKEN=${DISCORD_TOKEN:-}

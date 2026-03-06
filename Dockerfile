@@ -2,7 +2,6 @@
 FROM node:22-slim
 
 # Install system dependencies required for building native modules and audio processing
-# Added build-essential and python3 for npm install compatibility
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -19,8 +18,9 @@ WORKDIR /app
 # Copy package files first to leverage Docker cache
 COPY package*.json ./
 
-# Install dependencies (verbose to debug errors if they occur)
-RUN npm install --production || (npm install --production --verbose && exit 1)
+# Install dependencies
+# Note: Not using --production to ensure native modules can build correctly
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application code
 COPY . .
