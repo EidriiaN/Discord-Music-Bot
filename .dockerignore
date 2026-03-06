@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment files (use Portainer env vars instead)
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Development files
+development.md
+README.md
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.tgz
