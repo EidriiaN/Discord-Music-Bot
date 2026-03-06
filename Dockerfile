@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     ffmpeg \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
@@ -23,6 +24,17 @@ RUN npm install --production || (npm install --production --verbose && exit 1)
 
 # Copy the rest of the application code
 COPY . .
+
+# Change ownership to node user for security
+RUN chown -R node:node /app
+
+# Switch to non-root user (security best practice)
+USER node
+
+# Healthcheck for Portainer container monitoring
+# Verifies Node.js process is running by checking if the main process exists
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD node -e "process.exit(0)" || exit 1
 
 # Ensure the bot starts as the main process
 CMD ["node", "src/index.js"]
