@@ -9,12 +9,15 @@ services:
     container_name: discord-music-bot
     restart: unless-stopped
     
-    # Environment variables - configure in Portainer or via .env file
+    # Load .env file if it exists (optional - won't fail if missing)
     env_file:
-      - .env
+      - path: .env
+        required: false
+    
+    # Environment variables - configure in Portainer or via .env file
     environment:
       # Required: Discord Bot Token
-      - DISCORD_TOKEN=${DISCORD_TOKEN:?DISCORD_TOKEN is required}
+      - DISCORD_TOKEN=${DISCORD_TOKEN:-}
       # Required: Discord Application/Client ID
       - CLIENT_ID=${CLIENT_ID:-}
       # YouTube Authentication (2026 bypass)
@@ -25,10 +28,9 @@ services:
       # Node.js memory configuration
       - NODE_OPTIONS=--max-old-space-size=2048
     
-    # Volume mounts for persistent data
-    volumes:
-      # Mount cookies.txt if using file-based auth (read-only for security)
-      - ./cookies.txt:/app/cookies.txt:ro
+    # Volume mounts - uncomment if using file-based cookie auth
+    # volumes:
+    #   - ./cookies.txt:/app/cookies.txt:ro
     
     # Healthcheck for Portainer monitoring
     healthcheck:
