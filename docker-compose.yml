@@ -10,6 +10,10 @@ services:
     container_name: discord-music-bot
     restart: unless-stopped
     
+    # REQUIRED for Linux Homelabs: Use host network mode for voice
+    # This resolves UDP "hole punching" issues behind NAT/Bridge
+    network_mode: host
+    
     # Environment variables - Pass these in Portainer's Stack UI
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
@@ -18,26 +22,17 @@ services:
       - VISITOR_DATA=${VISITOR_DATA}
       - YOUTUBE_COOKIES=${YOUTUBE_COOKIES}
     
-    # Named volumes for persistence (minimal data, but good practice)
+    # Named volumes for persistence
     volumes:
       - bot_data:/app/data
 
-    # Healthcheck ensures Portainer can monitor if the bot is actually running
+    # Healthcheck
     healthcheck:
-      # This checks if the node process is running without needing pgrep
-      test: ["CMD-SHELL", "ps aux | grep 'node src/index.js' | grep -v grep || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'node src/index.js' > /dev/null || exit 1"]
       interval: 1m
       timeout: 10s
       retries: 3
       start_period: 20s
-
-    # Resource management for shared VPS environments
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 128M
 
     logging:
       driver: "json-file"

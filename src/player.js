@@ -6,6 +6,11 @@ import { execSync } from "child_process";
 import ffmpeg from "ffmpeg-static";
 import "dotenv/config";
 
+// Force FFmpeg path for prism-media (used by discord-player)
+if (ffmpeg) {
+    process.env.FFMPEG_PATH = ffmpeg;
+}
+
 export const setupPlayer = async (client) => {
   // Check for FFmpeg
   try {
@@ -18,7 +23,7 @@ export const setupPlayer = async (client) => {
   }
 
   const player = new Player(client, {
-    skipFFmpeg: false, // MANDATORY: Ensure transcoding is always active
+    skipFFmpeg: false, // Ensure transcoding is always active
     ytdlOptions: {
       quality: "highestaudio",
       highWaterMark: 1 << 25,
@@ -32,16 +37,14 @@ export const setupPlayer = async (client) => {
     },
   });
 
-  // Explicitly tell the player to use our ffmpeg-static binary
-  if (ffmpeg) {
-      player.scanDeps(); // Refresh dependencies
-  }
+  // Ensure dependencies are scanned (detect native opus/sodium)
+  await player.scanDeps();
 
   // --- Player Debug & Error Logging ---
 
   player.on("debug", (message) => {
-    // Only log important debug messages to avoid spam
-    if (message.includes("Error") || message.includes("fail") || message.includes("FFmpeg")) {
+    // Only log critical/ffmpeg debug messages to avoid spam
+    if (message.toLowerCase().includes("error") || message.toLowerCase().includes("fail") || message.includes("FFmpeg")) {
         console.log(`[Player Critical Debug] ${message}`);
     }
   });
