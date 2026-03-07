@@ -68,7 +68,7 @@ export const handleCommand = async (message) => {
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
-        const { track } = await player.play(member.voice.channel, query, {
+        const { track, queue: newQueue } = await player.play(member.voice.channel, query, {
           nodeOptions: {
             metadata: { channel, author: message.author },
             leaveOnEmpty: true,
@@ -91,14 +91,39 @@ export const handleCommand = async (message) => {
             timeout: 30000, // Voice connection timeout
           },
         });
-        return msg.edit(`🎶 | Added **${track.title}** to queue!`);
-      } catch (e) {
-        // Clean up on error
+
+        // --- Voice Connection Debugging ---
         const connection = getVoiceConnection(guildId);
         if (connection) {
-          connection.destroy();
+          connection.on("stateChange", (oldState, newState) => {
+            console.log(`[Voice Connection] [${guildId}] ${oldState.status} -> ${newState.status}`);
+          });
+          connection.on("error", (error) => {
+            console.error(`[Voice Connection] [${guildId}] CRITICAL ERROR:`, error);
+          });
+          
+          // Debug Audio Player (internal to the connection)
+          if (connection.state.subscription?.player) {
+            const audioPlayer = connection.state.subscription.player;
+            audioPlayer.on("stateChange", (oldState, newState) => {
+              console.log(`[Audio Player] [${guildId}] ${oldState.status} -> ${newState.status}`);
+            });
+            audioPlayer.on("error", (error) => {
+              console.error(`[Audio Player] [${guildId}] PLAYBACK ERROR:`, error);
+            });
+            audioPlayer.on("debug", (message) => {
+              console.log(`[Audio Player Debug] [${guildId}] ${message}`);
+            });
+          }
         }
-        return msg.edit(`❌ | Error: ${e.message}`);
+
+        return msg.edit(`🎶 | Added **${track.title}** to queue!`);
+      } catch (e) {
+        // Log the full error to console for Docker logs
+        console.error(`[Play Command Error] [${guildId}] FAIL:`, e);
+        if (e.message.includes("403") || e.message.includes("Forbidden")) {
+          console.error("🛑 | YOUTUBE 403 FORBIDDEN - Likely PO_TOKEN or Cookies expired.");
+        }
       } finally {
         // Release lock after connection attempt completes (success or failure)
         connectionLocks.delete(guildId);

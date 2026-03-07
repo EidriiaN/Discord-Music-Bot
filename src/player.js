@@ -23,6 +23,16 @@ export const setupPlayer = async (client) => {
     connectionTimeout: 30000, // 30 second timeout for voice connection
   });
 
+  // --- Player Debug & Error Logging ---
+
+  player.on("debug", (message) => {
+    console.log(`[Player Debug] ${message}`);
+  });
+
+  player.events.on("debug", (queue, message) => {
+    console.log(`[Queue Debug] [${queue.guild.id}] ${message}`);
+  });
+
   // Track recent errors to prevent spam
   const recentErrors = new Map();
 
@@ -63,10 +73,12 @@ export const setupPlayer = async (client) => {
   // --- Player Events ---
 
   player.events.on("playerStart", (queue, track) => {
+    console.log(`▶️ | Started playing: "${track.title}" in guild ${queue.guild.id}`);
     queue.metadata.channel.send(`🎶 | Now playing: **${track.title}**\n👤 | Requested by: <@${queue.metadata.author.id}>`);
   });
 
   player.events.on("emptyQueue", (queue) => {
+    console.log(`💤 | Queue finished in guild ${queue.guild.id}`);
     queue.metadata.channel.send("💤 | Queue finished! Disconnecting...");
   });
 
@@ -77,36 +89,35 @@ export const setupPlayer = async (client) => {
     const lastSent = recentErrors.get(key);
     if (lastSent && now - lastSent < 5000) return false;
     recentErrors.set(key, now);
-    // Clean up old entries
-    for (const [k, t] of recentErrors) {
-      if (now - t > 10000) recentErrors.delete(k);
-    }
     return true;
   };
 
   player.events.on("error", (queue, error) => {
-    console.error(`[Player Error] ${error.message}`);
-    if (!queue?.metadata?.channel) return;
+    console.error(`[Player Error] [${queue.guild.id}] CRITICAL: ${error.message}`);
+    console.error(error.stack);
     if (shouldSendError(queue.guild.id, error.message)) {
       queue.metadata.channel.send(`❌ | Critical error: ${error.message}`);
     }
   });
 
   player.events.on("playerError", (queue, error) => {
-    console.error(`[Playback Error] ${error.message}`);
-    if (!queue?.metadata?.channel) return;
+    console.error(`[Playback Error] [${queue.guild.id}] EXCEPTION: ${error.message}`);
+    console.error(error.stack);
     if (shouldSendError(queue.guild.id, error.message)) {
       queue.metadata.channel.send(`❌ | Playback failed: ${error.message}`);
     }
   });
 
-  // Handle connection errors specifically
   player.events.on("connectionError", (queue, error) => {
-    console.error(`[Connection Error] ${error.message}`);
-    if (!queue?.metadata?.channel) return;
+    console.error(`[Connection Error] [${queue.guild.id}] VOICE: ${error.message}`);
     if (shouldSendError(queue.guild.id, error.message)) {
       queue.metadata.channel.send(`❌ | Voice connection error: ${error.message}`);
     }
+  });
+
+  // Specifically catch extraction failures
+  player.events.on("emptyChannel", (queue) => {
+    console.log(`🔇 | Channel empty in ${queue.guild.id}, leaving.`);
   });
 
   return player;
