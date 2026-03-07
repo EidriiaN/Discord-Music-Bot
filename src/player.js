@@ -26,11 +26,6 @@ export const setupPlayer = async (client) => {
   // Track recent errors to prevent spam
   const recentErrors = new Map();
 
-  // Debug events to help diagnose voice issues
-  player.events.on("debug", (queue, message) => {
-    console.log(`[Player Debug] ${message}`);
-  });
-
   // Load cookies from .env OR file
   let cookies = process.env.YOUTUBE_COOKIES || "";
 

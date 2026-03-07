@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Events } from "discord.js";
 import "dotenv/config";
 import { setupPlayer } from "./player.js";
 import { handleCommand } from "./commandHandler.js";
@@ -18,7 +18,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
-client.once("ready", async () => {
+client.once(Events.ClientReady, async () => {
   // Setup the player after client is ready
   await setupPlayer(client);
   console.log(`🤖 | Bot ready as ${client.user.tag} (Prefix: !!)`);
