@@ -3,23 +3,25 @@ import { DefaultExtractors } from "@discord-player/extractor";
 import { readFileSync, existsSync } from "fs";
 import { getVoiceConnection } from "@discordjs/voice";
 import { execSync } from "child_process";
+import ffmpeg from "ffmpeg-static";
 import "dotenv/config";
 
 export const setupPlayer = async (client) => {
   // Check for FFmpeg
   try {
-    const ffmpegVersion = execSync("ffmpeg -version").toString().split("\n")[0];
+    const ffmpegPath = ffmpeg || "ffmpeg";
+    const ffmpegVersion = execSync(`${ffmpegPath} -version`).toString().split("\n")[0];
     console.log(`✅ | FFmpeg detected: ${ffmpegVersion}`);
+    console.log(`📂 | FFmpeg Path: ${ffmpegPath}`);
   } catch (e) {
-    console.error("❌ | FFmpeg NOT found in PATH! Audio will not play.");
+    console.error("❌ | FFmpeg NOT found! Audio will not play.");
   }
 
   const player = new Player(client, {
     ytdlOptions: {
       quality: "highestaudio",
-      highWaterMark: 1 << 25, // Large initial buffer
+      highWaterMark: 1 << 25,
       filter: "audioonly",
-      format: "bestaudio/best", // Force best quality audio stream
       requestOptions: {
         headers: {
           "X-Youtube-PO-Token": process.env.PO_TOKEN || "",
@@ -27,15 +29,20 @@ export const setupPlayer = async (client) => {
         },
       },
     },
-    // --- 2026 Audio Stability Fixes ---
-    skipFFmpeg: false, // Ensure we use FFmpeg for processing
-    connectionTimeout: 30000, // 30 second timeout for voice connection
   });
+
+  // Explicitly tell the player to use our ffmpeg-static binary
+  if (ffmpeg) {
+      player.scanDeps(); // Refresh dependencies
+  }
 
   // --- Player Debug & Error Logging ---
 
   player.on("debug", (message) => {
-    console.log(`[Player Debug] ${message}`);
+    // Only log important debug messages to avoid spam
+    if (message.includes("Error") || message.includes("fail") || message.includes("FFmpeg")) {
+        console.log(`[Player Critical Debug] ${message}`);
+    }
   });
 
   player.events.on("debug", (queue, message) => {
