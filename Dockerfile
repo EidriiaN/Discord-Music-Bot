@@ -21,8 +21,8 @@ WORKDIR /app
 # Copy dependency manifests
 COPY package*.json ./
 
-# Install dependencies (will compile native modules thanks to build-essential)
-RUN npm ci --omit=dev
+# Use npm install for better compatibility with freshly updated lockfiles
+RUN npm install --omit=dev
 
 # Copy the rest of the application
 COPY src/ ./src/
