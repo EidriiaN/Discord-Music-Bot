@@ -2,9 +2,18 @@ import { Player } from "discord-player";
 import { DefaultExtractors } from "@discord-player/extractor";
 import { readFileSync, existsSync } from "fs";
 import { getVoiceConnection } from "@discordjs/voice";
+import { execSync } from "child_process";
 import "dotenv/config";
 
 export const setupPlayer = async (client) => {
+  // Check for FFmpeg
+  try {
+    const ffmpegVersion = execSync("ffmpeg -version").toString().split("\n")[0];
+    console.log(`✅ | FFmpeg detected: ${ffmpegVersion}`);
+  } catch (e) {
+    console.error("❌ | FFmpeg NOT found in PATH! Audio will not play.");
+  }
+
   const player = new Player(client, {
     ytdlOptions: {
       quality: "highestaudio",

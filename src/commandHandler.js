@@ -78,17 +78,11 @@ export const handleCommand = async (message) => {
             inlineVolume: true,
             disableVbr: true,
             // --- Voice Connection Settings ---
-            connectionTimeout: 30000, // 30 second timeout
-            // --- High Quality Audio Settings ---
-            resamplerOptions: {
-              resampleAntialiasing: true,
-              filterSize: 32,
-            },
-            encoderArgs: ["-b:a", "192k", "-ar", "48000", "-ac", "2"],
+            connectionTimeout: 30000,
           },
           connectionOptions: {
             deaf: true,
-            timeout: 30000, // Voice connection timeout
+            timeout: 30000,
           },
         });
 
