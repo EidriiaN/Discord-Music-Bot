@@ -18,6 +18,7 @@ export const setupPlayer = async (client) => {
   }
 
   const player = new Player(client, {
+    skipFFmpeg: false, // MANDATORY: Ensure transcoding is always active
     ytdlOptions: {
       quality: "highestaudio",
       highWaterMark: 1 << 25,
