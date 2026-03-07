@@ -1,42 +1,49 @@
-# Discord Music Bot - Docker Compose for Portainer
-# Deploy as a Stack in Portainer
+# Discord Music Bot - Docker Compose for Portainer Stacks
+# Deploy as a "Stack" in Portainer
+
+version: '3.8'
 
 services:
-  discord-music-bot:
+  music-bot:
     build: .
     image: discord-music-bot:latest
     container_name: discord-music-bot
     restart: unless-stopped
+    
+    # Environment variables - Pass these in Portainer's Stack UI
     environment:
-      # Required - Discord credentials
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - CLIENT_ID=${CLIENT_ID}
-      
-      # YouTube authentication (Base64 encoded for Portainer)
       - PO_TOKEN=${PO_TOKEN}
       - VISITOR_DATA=${VISITOR_DATA}
-      
-      # Optional - YouTube cookies (Base64 encoded)
       - YOUTUBE_COOKIES=${YOUTUBE_COOKIES}
     
-    # Healthcheck to ensure bot stays alive
+    # Named volumes for persistence (minimal data, but good practice)
+    volumes:
+      - bot_data:/app/data
+
+    # Healthcheck ensures Portainer can monitor if the bot is actually running
     healthcheck:
-      test: ["CMD", "node", "-e", "process.exit(0)"]
-      interval: 30s
+      test: ["CMD-SHELL", "pgrep -f 'node src/index.js' > /dev/null || exit 1"]
+      interval: 1m
       timeout: 10s
       retries: 3
-      start_period: 10s
-    
-    # Resource limits (adjust as needed)
+      start_period: 20s
+
+    # Resource management for shared VPS environments
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
-          memory: 256M
-    
+          memory: 128M
+
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  bot_data:
+    driver: local
