@@ -24,7 +24,8 @@ services:
 
     # Healthcheck ensures Portainer can monitor if the bot is actually running
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'node src/index.js' > /dev/null || exit 1"]
+      # This checks if the node process is running without needing pgrep
+      test: ["CMD-SHELL", "ps aux | grep 'node src/index.js' | grep -v grep || exit 1"]
       interval: 1m
       timeout: 10s
       retries: 3
