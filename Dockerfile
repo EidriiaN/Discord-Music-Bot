@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     curl \
+    procps \
+    libopus-dev \
+    libtool \
+    autoconf \
+    automake \
     && rm -rf /var/lib/apt/lists/*
 
 
